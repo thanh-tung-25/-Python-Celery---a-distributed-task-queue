@@ -41,3 +41,46 @@ Kiểm tra Redis đang hoạt động:
 docker ps
 Nếu container bị dừng:
 docker start my-redis
+🚀 Chạy hệ thống
+Mở Cửa sổ 1 – Worker
+cd C:\xampp\htdocs\-Python-Celery---a-distributed-task-queue
+.\venv\Scripts\Activate.ps1
+celery -A celery_app worker --loglevel=info --pool=solo
+Mở Cửa sổ 2 – Client
+cd C:\xampp\htdocs\-Python-Celery---a-distributed-task-queue
+.\venv\Scripts\Activate.ps1
+python run_task.py
+Kết quả:
+📤 Đã gửi task cộng 10 + 20
+📥 Kết quả: 30
+📄 Mô tả kỹ thuật
+| Thành phần               | Vai trò                       | Công nghệ    |
+| ------------------------ | ----------------------------- | ------------ |
+| `run_task.py`            | Gửi task đến Redis (Producer) | Python       |
+| `Redis`                  | Message Broker + Backend      | Docker Redis |
+| `celery_app/__init__.py` | Khởi tạo Celery App           | Celery       |
+| `celery_app/tasks.py`    | Định nghĩa task thực thi      | Celery Task  |
+| `celery worker`          | Nhận và xử lý task (Consumer) | Celery       |
+🧠 Kết luận
+
+Dự án minh họa mô hình phân tán tác vụ (Distributed Task Queue) với:
+
+Tính bất đồng bộ (asynchronous)
+
+Phân tán xử lý giữa nhiều tiến trình / máy
+
+Mở rộng dễ dàng bằng việc thêm worker mới
+
+Celery + Redis là một giải pháp phổ biến trong các hệ thống phân tán thực tế như:
+
+Gửi email hàng loạt
+
+Xử lý dữ liệu lớn (batch processing)
+
+Lên lịch tác vụ định kỳ
+
+Xử lý nền trong web application
+
+👨‍💻 Tác giả
+Đặng Thanh Tùng 
+Lê Đình Đức Anh
