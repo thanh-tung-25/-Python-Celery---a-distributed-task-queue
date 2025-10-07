@@ -12,20 +12,20 @@ Dự án được xây dựng phục vụ môn học **Ứng dụng phân tán**
 
 ## 🧠 Kiến trúc hệ thống
 
-+-------------+ +-----------------------------+ +----------------+
-| run_task.py | -----> | Redis Queue | -----> | Celery Worker(s) |
-|   (Client)  |        |  (Broker)   |        |  (Consumers)     |
-+-------------+ +-----------------------------+ +----------------+
++-------------+ +-----------------------------+ +----------------+<br>
+| run_task.py | -----> | Redis Queue | -----> | Celery Worker(s) |<br>
+|   (Client)  |        |  (Broker)   |        |  (Consumers)     |<br>
++-------------+ +-----------------------------+ +----------------+<br>
 
--Python-Celery---a-distributed-task-queue/
-│
-├── celery_app/
-│ ├── init.py # Khởi tạo Celery app (kết nối Redis)
-│ └── tasks.py # Định nghĩa các task (ví dụ: cộng 2 số)
-│
-├── run_task.py # Gửi task đến hàng đợi
-├── requirements.txt # Các thư viện cần thiết
-└── README.md 
+-Python-Celery---a-distributed-task-queue/<br>
+│<br>
+├── celery_app/<br>
+│ ├── init.py # Khởi tạo Celery app (kết nối Redis)<br>
+│ └── tasks.py # Định nghĩa các task (ví dụ: cộng 2 số)<br>
+│<br>
+├── run_task.py # Gửi task đến hàng đợi<br>
+├── requirements.txt # Các thư viện cần thiết<br>
+└── README.md <br>
 
 ---
 
