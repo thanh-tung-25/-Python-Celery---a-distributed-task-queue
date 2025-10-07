@@ -16,6 +16,7 @@ Dự án được xây dựng phục vụ môn học **Ứng dụng phân tán**
 | run_task.py | -----> | Redis Queue | -----> | Celery Worker(s) |
 |   (Client)  |        |  (Broker)   |        |  (Consumers)     |
 +-------------+ +-----------------------------+ +----------------+
+
 -Python-Celery---a-distributed-task-queue/
 │
 ├── celery_app/
@@ -24,7 +25,7 @@ Dự án được xây dựng phục vụ môn học **Ứng dụng phân tán**
 │
 ├── run_task.py # Gửi task đến hàng đợi
 ├── requirements.txt # Các thư viện cần thiết
-└── README.md # Tài liệu mô tả (file này)
+└── README.md 
 
 ---
 
