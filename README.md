@@ -84,3 +84,8 @@ Xử lý nền trong web application
 👨‍💻 Tác giả
 Đặng Thanh Tùng 
 Lê Đình Đức Anh
+
+📚 Tham khảo
+Celery Documentation
+Redis Documentation
+Python Official Website
