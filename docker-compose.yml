@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:7
+    container_name: my-redis
+    ports:
+      - "6379:6379"
+
+  flower:
+    image: mher/flower
+    container_name: flower
+    environment:
+      - CELERY_BROKER_API=http://redis:6379
+    ports:
+      - "5555:5555"
