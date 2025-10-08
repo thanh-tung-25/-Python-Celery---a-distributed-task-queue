@@ -38,10 +38,17 @@ python -m venv venv
 🧩 Cấu hình Redis
 Sử dụng Docker:
 docker run -d --name my-redis -p 6379:6379 redis
-Kiểm tra Redis đang hoạt động:
-docker ps
-Nếu container bị dừng:
-docker start my-redis
+-Kiểm tra Redis đang hoạt động:
+---docker ps
+-Nếu container bị dừng:
+---docker start my-redis
+-Sau đó kiểm tra lại:
+---docker ps
+→ Lúc này Redis đang chạy.
+– Kiểm tra Redis hoạt động thật chưa
+---docker exec -it my-redis redis-cli ping
+Nếu trả về:PONG
+→ Redis đã OK 
 🚀 Chạy hệ thống
 Mở Cửa sổ 1 – Worker
 cd C:\xampp\htdocs\-Python-Celery---a-distributed-task-queue
