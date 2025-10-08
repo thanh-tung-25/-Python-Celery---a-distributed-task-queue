@@ -1,4 +1,4 @@
-body { font-family: Arial, sans-serif; margin: 20px; }
-input { margin: 4px; padding: 6px; }
-button { padding: 6px 10px; margin-left: 6px; }
-section { margin-bottom: 20px; }
+body { font-family: Arial, sans-serif; margin: 30px; }
+input, textarea { width: 400px; padding: 6px; }
+button { padding: 8px 12px; }
+#status { margin-top: 18px; font-weight: bold; }

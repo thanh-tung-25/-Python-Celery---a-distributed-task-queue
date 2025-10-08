@@ -1,43 +1,44 @@
-const API_BASE = "http://localhost:5000";
+// frontend/script.js
+const API = "http://127.0.0.1:5000";
 
-async function postJson(url, data) {
-  const res = await fetch(url, {
+document.getElementById("emailForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const to = document.getElementById("to").value;
+  const subject = document.getElementById("subject").value;
+  const message = document.getElementById("message").value;
+  const statusEl = document.getElementById("status");
+
+  statusEl.textContent = "📤 Gửi tác vụ...";
+
+  const res = await fetch(`${API}/send_email`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(data)
+    body: JSON.stringify({to, subject, message})
   });
-  return await res.json();
-}
 
-async function getJson(url) {
-  const res = await fetch(url);
-  return await res.json();
-}
+  if (!res.ok) {
+    const err = await res.json();
+    statusEl.textContent = "❌ Lỗi: " + (err.error || res.statusText);
+    return;
+  }
 
-document.getElementById("sendAdd").addEventListener("click", async () => {
-  const a = document.getElementById("a").value || 0;
-  const b = document.getElementById("b").value || 0;
-  const resp = await postJson(`${API_BASE}/add`, {a: parseInt(a), b: parseInt(b)});
-  const id = resp.task_id;
-  document.getElementById("addStatus").textContent = `Task gửi: ${id} — Đang chờ...`;
-  pollResult(id, (data) => {
-    document.getElementById("addStatus").textContent = `Kết quả: ${data.result} (status: ${data.status})`;
-  });
-});
+  const data = await res.json();
+  const taskId = data.task_id;
+  statusEl.textContent = `⏳ Đã xếp hàng (task id: ${taskId}). Đang chờ worker...`;
 
-document.getElementById("sendReverse").addEventListener("click", async () => {
-  const text = document.getElementById("text").value || "";
-  const resp = await postJson(`${API_BASE}/add`, {a: 0, b: 0}); // not used; use separate endpoint if needed
-  // For demo, call reverse via task name endpoint - create new endpoint in API if wanted.
-  alert("Sử dụng demo: vui lòng dùng endpoint /add cho phép cộng. Bạn có thể mở rộng API để gọi reverse_text.");
-});
-
-function pollResult(taskId, callback) {
-  const iv = setInterval(async () => {
-    const data = await getJson(`${API_BASE}/result/${taskId}`);
-    if (data.status === "SUCCESS" || data.status === "FAILURE") {
-      clearInterval(iv);
-      callback(data);
+  // poll for result
+  const poll = setInterval(async () => {
+    const r = await fetch(`${API}/result/${taskId}`);
+    const rr = await r.json();
+    if (rr.status === "SUCCESS") {
+      clearInterval(poll);
+      statusEl.textContent = `✅ Hoàn thành: ${rr.result}`;
+    } else if (rr.status === "FAILURE") {
+      clearInterval(poll);
+      statusEl.textContent = `❌ Thất bại: ${rr.result}`;
+    } else {
+      // still pending
+      statusEl.textContent = `⏳ Trạng thái: ${rr.status} (task id: ${taskId})`;
     }
-  }, 1000);
-}
+  }, 1500);
+});

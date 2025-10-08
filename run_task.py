@@ -1,13 +1,9 @@
-from celery_app.tasks import add, reverse_text
-
-def main():
-    r = add.delay(10, 20)
-    print("📤 Sent add task id:", r.id)
-    print("📥 Result:", r.get(timeout=30))
-
-    r2 = reverse_text.delay("Celery Distributed Task Queue")
-    print("📤 Sent reverse_text id:", r2.id)
-    print("📥 Result:", r2.get(timeout=30))
+# run_task.py
+from celery_app.tasks import send_email_task
 
 if __name__ == "__main__":
-    main()
+    print("📤 Gửi email giả lập...")
+    task = send_email_task.delay("test@example.com", "Xin chào", "Đây là email demo.")
+    print("🆔 Task ID:", task.id)
+    print("⏳ Đang xử lý...")
+    print("📥 Kết quả:", task.get(timeout=10))

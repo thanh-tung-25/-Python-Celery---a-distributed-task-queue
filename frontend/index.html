@@ -1,28 +1,40 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <title>Celery Demo</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Gửi Email Bất Đồng Bộ</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 100px; }
+    input, textarea { width: 300px; margin: 5px; padding: 8px; }
+    button { padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 5px; }
+  </style>
 </head>
 <body>
-  <h1>Celery Distributed Task Demo</h1>
+  <h2>📧 Demo Gửi Email Bất Đồng Bộ (Giả lập)</h2>
+  <input id="to" placeholder="Người nhận"><br>
+  <input id="subject" placeholder="Tiêu đề"><br>
+  <textarea id="message" placeholder="Nội dung email"></textarea><br>
+  <button onclick="sendEmail()">Gửi Email</button>
+  <p id="result"></p>
 
-  <section>
-    <h2>Thực hiện phép cộng</h2>
-    <input id="a" type="number" placeholder="Số a">
-    <input id="b" type="number" placeholder="Số b">
-    <button id="sendAdd">Gửi tác vụ</button>
-    <p id="addStatus"></p>
-  </section>
+  <script>
+    async function sendEmail() {
+      const data = {
+        to_email: document.getElementById("to").value,
+        subject: document.getElementById("subject").value,
+        message: document.getElementById("message").value
+      };
 
-  <section>
-    <h2>Đảo chuỗi</h2>
-    <input id="text" type="text" placeholder="Nhập chuỗi">
-    <button id="sendReverse">Gửi tác vụ</button>
-    <p id="reverseStatus"></p>
-  </section>
+      const res = await fetch("http://127.0.0.1:5000/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
 
-  <script src="script.js"></script>
+      const json = await res.json();
+      document.getElementById("result").innerText =
+        "✅ Task đã gửi! ID: " + json.task_id;
+    }
+  </script>
 </body>
 </html>
