@@ -1,15 +1,33 @@
-version: '3.8'
 services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flask_api
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery_worker
+    command: celery -A celery_app.celery_config.app worker --loglevel=info
+    depends_on:
+      - redis
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+
   redis:
     image: redis:7
-    container_name: my-redis
+    container_name: redis
     ports:
       - "6379:6379"
-
-  flower:
-    image: mher/flower
-    container_name: flower
-    environment:
-      - CELERY_BROKER_API=http://redis:6379
-    ports:
-      - "5555:5555"

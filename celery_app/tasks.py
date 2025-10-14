@@ -1,22 +1,22 @@
 # celery_app/tasks.py
-from . import celery_app
-import time
+from .celery_config import app
+from .email_utils import send_email
 
-@celery_app.task(bind=True)
-def send_email_task(self, to_email, subject, message):
+@app.task(bind=True)
+def send_bulk_emails(self, subject, content, recipients):
     """
-    Task giả lập gửi email bất đồng bộ
+    recipients: list of email strings
+    Trả về list kết quả (string) hoặc raise lỗi.
     """
-    try:
-        print("📧 [TASK START] Bắt đầu gửi email...")
-        time.sleep(3)
-        print("----------------------------------------------------")
-        print(f"TO: {to_email}")
-        print(f"SUBJECT: {subject}")
-        print(f"MESSAGE: {message}")
-        print("----------------------------------------------------")
-        print("✅ [TASK DONE] Email giả lập đã gửi xong!")
-        return f"[SIMULATED] Email sent to {to_email}"
-    except Exception as e:
-        print(f"❌ Lỗi task: {e}")
-        raise self.retry(exc=e, countdown=10, max_retries=3)
+    results = []
+    if not isinstance(recipients, (list, tuple)):
+        raise ValueError("recipients must be a list")
+
+    for r in recipients:
+        try:
+            send_email(r, subject, content)
+            results.append(f"OK: {r}")
+        except Exception as exc:
+            # ghi lỗi vào result và tiếp tục gửi cho các email khác
+            results.append(f"ERR: {r} -> {str(exc)}")
+    return results

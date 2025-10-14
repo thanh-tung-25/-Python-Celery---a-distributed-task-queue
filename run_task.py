@@ -1,9 +1,10 @@
 # run_task.py
-from celery_app.tasks import send_email_task
+from celery_app.tasks import send_bulk_emails
 
 if __name__ == "__main__":
-    print("📤 Gửi email giả lập...")
-    task = send_email_task.delay("test@example.com", "Xin chào", "Đây là email demo.")
-    print("🆔 Task ID:", task.id)
-    print("⏳ Đang xử lý...")
-    print("📥 Kết quả:", task.get(timeout=10))
+    recipients = [
+        "recipient1@example.com",
+        # thêm email thực để test
+    ]
+    res = send_bulk_emails.delay("Test subject from Celery", "<h3>Test content</h3>", recipients)
+    print("Task queued:", res.id)
