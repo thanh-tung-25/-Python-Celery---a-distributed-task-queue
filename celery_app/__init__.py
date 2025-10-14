@@ -1,11 +1,19 @@
 # celery_app/__init__.py
 from celery import Celery
-from .celery_config import CELERY_BROKER_URL, CELERY_RESULT_BACKEND
+import os
+from dotenv import load_dotenv
 
+# Load biến môi trường
+load_dotenv()
+
+# Cấu hình Redis
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+# Khởi tạo Celery
 celery_app = Celery(
     "email_tasks",
-    broker=CELERY_BROKER_URL,
-    backend=CELERY_RESULT_BACKEND
+    broker=REDIS_URL,
+    backend=REDIS_URL
 )
 
 celery_app.conf.update(
@@ -13,5 +21,8 @@ celery_app.conf.update(
     result_serializer="json",
     accept_content=["json"],
     timezone="Asia/Ho_Chi_Minh",
-    enable_utc=True
+    enable_utc=True,
 )
+
+# Import tasks (đặt ở cuối để tránh import vòng tròn)
+from celery_app import tasks  # 👈 Dòng này cực kỳ quan trọng
