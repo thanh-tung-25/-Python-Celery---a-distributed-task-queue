@@ -1,40 +1,172 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <title>Gửi Email Bất Đồng Bộ</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gửi Email Bất Đồng Bộ — Demo Celery</title>
+
+  <!-- ====== STYLES (self-contained) ====== -->
   <style>
-    body { font-family: sans-serif; text-align: center; margin-top: 100px; }
-    input, textarea { width: 300px; margin: 5px; padding: 8px; }
-    button { padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 5px; }
+    :root{
+      --bg:#f6f9fc;
+      --card:#ffffff;
+      --primary:#075985;
+      --accent:#06b6d4;
+      --muted:#6b7280;
+      --success:#16a34a;
+      --danger:#dc2626;
+      --glass: rgba(255,255,255,0.6);
+      --radius:12px;
+      --max-width:980px;
+      --shadow: 0 8px 24px rgba(16,24,40,0.08);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%;background:linear-gradient(180deg,#eef2ff,#f6fbff);margin:0}
+    .wrap{max-width:var(--max-width);margin:28px auto;padding:24px}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+    .logo{
+      width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--primary),var(--accent));
+      display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;box-shadow:var(--shadow)
+    }
+    h1{margin:0;font-size:22px;color:#0f172a}
+    p.lead{margin:6px 0 0;color:var(--muted);font-size:14px}
+
+    /* layout */
+    .grid{display:grid;grid-template-columns:1fr 380px;gap:20px}
+    @media(max-width:920px){.grid{grid-template-columns:1fr;}}
+    .card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    form .row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type="text"], input[type="email"], textarea{
+      width:100%;padding:10px 12px;border-radius:10px;border:1px solid #e6eef6;background:transparent;outline:none;
+      font-size:14px;color:#0f172a;box-sizing:border-box;
+    }
+    textarea{min-height:120px;resize:vertical}
+    .btn{
+      display:inline-flex;align-items:center;gap:10px;background:var(--primary);color:#fff;padding:10px 14px;border-radius:10px;border:none;
+      cursor:pointer;font-weight:600;box-shadow:0 6px 18px rgba(3,105,161,0.12)
+    }
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .btn--ghost{background:transparent;color:var(--primary);border:1px solid rgba(7,89,133,0.08)}
+    .meta{font-size:13px;color:var(--muted);margin-top:8px}
+
+    /* status + progress */
+    .status{display:flex;gap:12px;align-items:center;margin-top:12px;font-weight:600}
+    .chip{padding:6px 10px;border-radius:999px;background:#f1f5f9;color:#042a3b;font-size:13px}
+    .spinner{
+      width:20px;height:20px;border-radius:50%;border:3px solid rgba(0,0,0,0.08);border-top-color:var(--primary);
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* right column: history */
+    .history-list{display:flex;flex-direction:column;gap:10px;max-height:520px;overflow:auto;padding-right:6px}
+    .history-item{display:flex;justify-content:space-between;align-items:flex-start;padding:10px;border-radius:10px;border:1px solid #eef2f7;background:linear-gradient(180deg,#ffffff,#fbfdff)}
+    .history-left{font-size:13px}
+    .history-meta{font-size:12px;color:var(--muted)}
+    .history-actions{display:flex;gap:8px;align-items:center}
+
+    /* small helpers */
+    .muted{color:var(--muted);font-size:13px}
+    .success{color:var(--success);font-weight:700}
+    .error{color:var(--danger);font-weight:700}
+    .hr{height:1px;background:#eef5fb;margin:14px 0;border-radius:6px}
+
+    footer{margin-top:18px;font-size:13px;color:var(--muted)}
+    /* responsive tweaks */
+    @media(max-width:520px){
+      .logo{width:52px;height:52px}
+      .grid{gap:12px}
+      .history-item{flex-direction:column;align-items:flex-start}
+    }
   </style>
 </head>
 <body>
-  <h2>📧 Demo Gửi Email Bất Đồng Bộ (Giả lập)</h2>
-  <input id="to" placeholder="Người nhận"><br>
-  <input id="subject" placeholder="Tiêu đề"><br>
-  <textarea id="message" placeholder="Nội dung email"></textarea><br>
-  <button onclick="sendEmail()">Gửi Email</button>
-  <p id="result"></p>
+  <div class="wrap">
+    <header>
+      <div class="logo">DT</div>
+      <div>
+        <h1>Celery Distributed Task Demo — Gửi Email (Giả lập)</h1>
+        <p class="lead">Frontend demo kết hợp Flask + Celery + Redis. Chạy ở chế độ mô phỏng: email không gửi thật, worker in nội dung.</p>
+      </div>
+    </header>
 
-  <script>
-    async function sendEmail() {
-      const data = {
-        to_email: document.getElementById("to").value,
-        subject: document.getElementById("subject").value,
-        message: document.getElementById("message").value
-      };
+    <div class="grid">
+      <!-- LEFT: form -->
+      <section class="card" aria-labelledby="formTitle">
+        <h2 id="formTitle" style="margin-top:0">Gửi Email (mô phỏng)</h2>
 
-      const res = await fetch("http://127.0.0.1:5000/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+        <form id="emailForm" onsubmit="return false" aria-describedby="formHelp">
+          <div class="row">
+            <div style="flex:1 1 220px">
+              <label for="to">Người nhận (To)</label>
+              <input id="to" type="email" placeholder="example@domain.com" autocomplete="email" required />
+            </div>
+            <div style="width:180px">
+              <label for="priority">Ưu tiên</label>
+              <select id="priority" style="padding:10px;border-radius:8px;border:1px solid #e6eef6;width:100%;background:#fff">
+                <option value="normal">Bình thường</option>
+                <option value="high">Cao</option>
+                <option value="low">Thấp</option>
+              </select>
+            </div>
+          </div>
 
-      const json = await res.json();
-      document.getElementById("result").innerText =
-        "✅ Task đã gửi! ID: " + json.task_id;
-    }
-  </script>
+          <div>
+            <label for="subject">Tiêu đề</label>
+            <input id="subject" type="text" placeholder="Tiêu đề email" />
+          </div>
+
+          <div style="margin-top:8px">
+            <label for="message">Nội dung</label>
+            <textarea id="message" placeholder="Viết nội dung email..." ></textarea>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-top:12px;align-items:center">
+            <button id="sendBtn" class="btn" type="button">Gửi Email</button>
+            <button id="clearBtn" class="btn btn--ghost" type="button">Xóa form</button>
+            <div class="meta muted" id="formHelp">Dạng mô phỏng — kết quả hiển thị ở lịch sử bên phải và worker log.</div>
+          </div>
+
+          <div class="status" aria-live="polite" id="liveStatus" style="display:none">
+            <div class="spinner" id="statusSpinner" aria-hidden="true"></div>
+            <div id="statusText">Đang gửi...</div>
+          </div>
+
+        </form>
+
+        <div class="hr"></div>
+
+        <div>
+          <h3 style="margin:0 0 8px 0">Tùy chọn & Kiểm thử</h3>
+          <div class="muted">Bạn có thể gửi nhiều task liên tiếp. Hệ thống lưu lịch sử task (localStorage) để xem kết quả.</div>
+        </div>
+      </section>
+
+      <!-- RIGHT: history -->
+      <aside class="card" aria-labelledby="historyTitle">
+        <h3 id="historyTitle" style="margin-top:0">Lịch sử Task</h3>
+        <div class="history-list" id="historyList" aria-live="polite" aria-atomic="true"></div>
+
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button id="clearHistory" class="btn btn--ghost" type="button">Xóa lịch sử</button>
+          <button id="refreshAll" class="btn btn--ghost" type="button">Cập nhật trạng thái</button>
+        </div>
+
+        <div class="hr"></div>
+        <div class="muted">Lưu ý: lịch sử lưu trên trình duyệt (localStorage). Đóng/ mở browser vẫn giữ lại.</div>
+      </aside>
+    </div>
+
+    <footer>
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+        <div class="muted">Demo cho bài: Ứng dụng phân tán — Celery + Redis</div>
+        <div class="muted">Frontend ready • Worker (console) là chứng thực gửi ảo</div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ====== Load script.js ====== -->
+  <script src="script.js"></script>
 </body>
 </html>
