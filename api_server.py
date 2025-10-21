@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from celery_app.tasks import send_bulk_emails
 from celery_app.celery_config import app as celery_app
 from dotenv import load_dotenv
-
+from db import save_email_log
 load_dotenv()
 
 app = Flask(__name__, static_folder="frontend", static_url_path="/")

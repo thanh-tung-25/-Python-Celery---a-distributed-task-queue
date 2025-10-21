@@ -1,7 +1,7 @@
 # celery_app/tasks.py
 from .celery_config import app
 from .email_utils import send_email
-
+from db import save_email_log
 @app.task(bind=True)
 def send_bulk_emails(self, subject, content, recipients):
     """
