@@ -1,12 +1,13 @@
+# db/database.py
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
-# Khởi tạo đối tượng SQLAlchemy (sẽ được liên kết với Flask app trong api_server.py)
+# 🧱 Tạo đối tượng SQLAlchemy (sẽ gắn với Flask app ở api_server.py)
 db = SQLAlchemy()
 
 class EmailLog(db.Model):
     """
-    Bảng lưu lịch sử gửi email.
+    Bảng lưu lịch sử gửi email
     """
     __tablename__ = "email_logs"
 
@@ -20,10 +21,20 @@ class EmailLog(db.Model):
     def __repr__(self):
         return f"<EmailLog {self.email} - {self.status}>"
 
-def save_email_log(db_session, email, subject, body, status):
+def init_db(app):
     """
-    Hàm lưu một bản ghi log email vào database.
-    Được gọi từ Celery task hoặc Flask API.
+    Khởi tạo database với Flask app.
+    Gọi hàm này trong api_server.py sau khi tạo app Flask.
+    """
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
+        print("✅ SQLite database initialized (emails.db created).")
+
+def save_email_log(email, subject, body, status):
+    """
+    Lưu một bản ghi log email vào database.
+    Có thể gọi từ Flask hoặc Celery task.
     """
     try:
         log = EmailLog(
@@ -33,9 +44,9 @@ def save_email_log(db_session, email, subject, body, status):
             status=status,
             timestamp=datetime.utcnow()
         )
-        db_session.add(log)
-        db_session.commit()
+        db.session.add(log)
+        db.session.commit()
         print(f"💾 Saved log for {email} ({status})")
     except Exception as e:
-        db_session.rollback()
+        db.session.rollback()
         print(f"❌ Failed to save email log: {e}")
