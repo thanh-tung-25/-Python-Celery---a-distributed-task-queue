@@ -1,10 +1,18 @@
-FROM python:3.10-slim
+# Dockerfile
+FROM python:3.13-slim
 
+# Set working directory
 WORKDIR /app
-COPY requirements.txt .
+
+# Copy project files
+COPY . /app
+
+# Install dependencies
+RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
-
+# Expose Flask port
 EXPOSE 5000
-CMD ["python", "api_server.py"]
+
+# Default command (Flask) - worker chạy riêng qua docker-compose
+CMD ["flask", "run", "--host=0.0.0.0"]

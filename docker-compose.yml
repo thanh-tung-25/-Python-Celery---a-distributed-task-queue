@@ -1,8 +1,8 @@
+version: "3.9"  # optional, nhưng để rõ phiên bản
+
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: flask_api
     ports:
       - "5000:5000"
@@ -14,15 +14,13 @@ services:
       - .:/app
 
   worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: celery_worker
-    command: celery -A celery_app.celery_config.app worker --loglevel=info
-    depends_on:
-      - redis
+    command: celery -A celery_app.celery_config.app worker --loglevel=info -P solo
     env_file:
       - .env
+    depends_on:
+      - redis
     volumes:
       - .:/app
 
@@ -30,4 +28,4 @@ services:
     image: redis:7
     container_name: redis
     ports:
-      - "6379:6379"
+      - "6380:6379"   # Host port 6380 để tránh xung đột với cổng 6379 trên máy
