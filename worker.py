@@ -1,5 +1,4 @@
-# worker.py
-from celery_app import celery_app
+from celery_app.celery_config import app
 
 if __name__ == "__main__":
-    celery_app.worker_main(["worker", "--loglevel=info"])
+    app.worker_main(["worker", "--loglevel=info", "-P", "solo"])

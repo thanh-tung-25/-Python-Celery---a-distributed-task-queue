@@ -1,43 +1,37 @@
-# celery_app/tasks.py
-from .celery_config import app
-from .email_utils import send_email
-from db.database import save_email_log
+from celery_app.celery_config import app
+from celery_app.email_utils import send_email
+import redis
+import os
+import json
+from datetime import datetime
+from db.database import save_email_log_sqlite
 
+REDIS_URL = os.getenv("REDIS_URL")
+r = redis.Redis.from_url(REDIS_URL)
 
-@app.task(bind=True)
-def send_bulk_emails(self, subject, content, recipients):
-    """
-    recipients: list of email strings
-    Gửi email hàng loạt, ghi log vào SQLite.
-    Trả về danh sách kết quả cho từng email.
-    """
-    results = []
+@app.task(bind=True, max_retries=3)
+def send_email_task(self, recipient, subject, body):
+    timestamp = datetime.utcnow().isoformat()
+    task_id = self.request.id
+    try:
+        send_email(recipient, subject, body)
+        status = 'SUCCESS'
+    except Exception as e:
+        status = 'FAILURE'
+        raise self.retry(exc=e, countdown=5)
 
-    if not isinstance(recipients, (list, tuple)):
-        raise ValueError("recipients must be a list")
+    log_entry = {
+        "recipient": recipient,
+        "subject": subject,
+        "status": status,
+        "timestamp": timestamp,
+        "task_id": task_id
+    }
 
-    for r in recipients:
-        try:
-            # 📨 Gửi email
-            send_email(r, subject, content)
-            
-            # 💾 Ghi log thành công vào SQLite
-            save_email_log(
-                email=r,
-                subject=subject,
-                body=content,
-                status="success"
-            )
-            results.append(f"✅ Sent successfully: {r}")
+    # Lưu Redis
+    r.set(f"email:{task_id}", json.dumps(log_entry), ex=86400)
 
-        except Exception as exc:
-            # 💾 Ghi log thất bại
-            save_email_log(
-                email=r,
-                subject=subject,
-                body=content,
-                status=f"failed ({str(exc)})"
-            )
-            results.append(f"❌ Failed: {r} -> {str(exc)}")
+    # Lưu SQLite
+    save_email_log_sqlite(log_entry)
 
-    return results
+    return status

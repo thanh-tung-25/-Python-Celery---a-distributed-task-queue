@@ -1,8 +1,7 @@
+version: '3'
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: flask_api
     ports:
       - "5000:5000"
@@ -14,15 +13,13 @@ services:
       - .:/app
 
   worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: celery_worker
-    command: celery -A celery_app.celery_config.app worker --loglevel=info
-    depends_on:
-      - redis
+    command: celery -A celery_app.celery_config.app worker --loglevel=info -P solo
     env_file:
       - .env
+    depends_on:
+      - redis
     volumes:
       - .:/app
 
