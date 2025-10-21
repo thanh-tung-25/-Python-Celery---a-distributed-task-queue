@@ -1,50 +1,54 @@
-from flask import Flask, request, render_template, jsonify
-from celery_app.tasks import send_email_task
-from db.database import init_db
-import sqlite3
+# api_server.py
 import os
+from flask import Flask, request, jsonify, send_from_directory
+from celery_app.tasks import send_bulk_emails
+from celery_app.celery_config import app as celery_app
+from dotenv import load_dotenv
 
-# Chỉ định template và static folder là frontend
-app = Flask(
-    __name__,
-    template_folder="frontend",  # chứa index.html, dashboard.html
-    static_folder="frontend"     # chứa style.css, script.js
-)
+load_dotenv()
 
-DB_PATH = "emails.db"
-init_db()
-@app.route('/')
+app = Flask(__name__, static_folder="frontend", static_url_path="/")
+
+# Route frontend
+@app.route("/")
 def index():
-    return render_template('index.html')
+    return send_from_directory("frontend", "index.html")
 
-@app.route('/send_email', methods=['POST'])
-def send_email_route():
-    data = request.json
-    recipient = data.get("recipient")
+@app.route("/<path:path>")
+def static_files(path):
+    return send_from_directory("frontend", path)
+
+# API phù hợp với frontend (script.js)
+@app.route("/send-email", methods=["POST"])
+def send_email():
+    data = request.get_json() or {}
+    # frontend có thể gửi: { "subject", "content", "recipients" }
     subject = data.get("subject")
-    body = data.get("body")
-    task = send_email_task.delay(recipient, subject, body)
-    return jsonify({"task_id": task.id}), 202
+    content = data.get("content")
+    recipients = data.get("recipients")
 
-@app.route('/dashboard')
-def dashboard():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT recipient, subject, status, timestamp FROM emails ORDER BY timestamp DESC LIMIT 50")
-    logs = c.fetchall()
-    conn.close()
-    return render_template('dashboard.html', logs=logs)
+    # nếu frontend gửi chỉ 1 email với key 'to' (cũ), hỗ trợ chuyển đổi
+    if not recipients and data.get("to"):
+        recipients = [data.get("to")]
 
-@app.route('/dashboard/stats')
-def dashboard_stats():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM emails WHERE status='SUCCESS'")
-    success_count = c.fetchone()[0]
-    c.execute("SELECT COUNT(*) FROM emails WHERE status='FAILURE'")
-    failure_count = c.fetchone()[0]
-    conn.close()
-    return jsonify({"success": success_count, "failure": failure_count})
+    if not subject or not content or not recipients:
+        return jsonify({"error": "Missing fields (subject, content, recipients/to)"}), 400
+
+    # Tạo task Celery
+    task = send_bulk_emails.delay(subject, content, recipients)
+    return jsonify({"task_id": task.id, "status": "queued"}), 202
+
+# API lấy trạng thái task
+@app.route("/result/<task_id>", methods=["GET"])
+def get_result(task_id):
+    result = celery_app.AsyncResult(task_id)
+    payload = {
+        "task_id": task_id,
+        "status": result.status,
+        "result": result.result if result.ready() else None,
+    }
+    return jsonify(payload)
 
 if __name__ == "__main__":
+    # chạy dev server
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)

@@ -1,19 +1,30 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="vi">
 <head>
-    <title>Email Sender</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gửi Email Hàng Loạt</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <h1>Send Email</h1>
+  <div class="container">
+    <h1>Gửi Email Hàng Loạt</h1>
     <form id="emailForm">
-        <input type="email" name="recipient" placeholder="Recipient email" required><br>
-        <input type="text" name="subject" placeholder="Subject" required><br>
-        <textarea name="body" placeholder="Body" required></textarea><br>
-        <button type="submit">Send</button>
+      <label>Tiêu đề</label>
+      <input id="subject" required />
+      <label>Nội dung (HTML)</label>
+      <textarea id="content" required></textarea>
+      <label>Danh sách người nhận (mỗi email 1 dòng)</label>
+      <textarea id="recipients" placeholder="a@gmail.com\nb@gmail.com" required></textarea>
+      <button type="submit">Gửi</button>
     </form>
-    <p id="status"></p>
-    <a href="/dashboard">View Dashboard</a>
-    <script src="script.js"></script>
+
+    <div id="statusBox" style="display:none">
+      <h3>Trạng thái</h3>
+      <pre id="status"></pre>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>

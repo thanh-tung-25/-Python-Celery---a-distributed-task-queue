@@ -85,7 +85,7 @@ Bash
 
 redis-server
 # hoặc dùng Docker:
-docker run -d -p 6379:6379 redis
+docker run -d -p 6380:6379 redis
 3. Mở terminal 1: chạy Flask API
 
 Bash

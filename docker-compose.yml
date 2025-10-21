@@ -1,4 +1,5 @@
-version: '3'
+version: "3.9"  # optional, nhưng để rõ phiên bản
+
 services:
   web:
     build: .
@@ -27,4 +28,4 @@ services:
     image: redis:7
     container_name: redis
     ports:
-      - "6379:6379"
+      - "6380:6379"   # Host port 6380 để tránh xung đột với cổng 6379 trên máy
