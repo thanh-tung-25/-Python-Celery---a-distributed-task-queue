@@ -1,30 +1,72 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gửi Email Hàng Loạt</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>Gửi Email Hàng Loạt</h1>
-    <form id="emailForm">
-      <label>Tiêu đề</label>
-      <input id="subject" required />
-      <label>Nội dung (HTML)</label>
-      <textarea id="content" required></textarea>
-      <label>Danh sách người nhận (mỗi email 1 dòng)</label>
-      <textarea id="recipients" placeholder="a@gmail.com\nb@gmail.com" required></textarea>
-      <button type="submit">Gửi</button>
-    </form>
-
-    <div id="statusBox" style="display:none">
-      <h3>Trạng thái</h3>
-      <pre id="status"></pre>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Celery Mail Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <h2>📬 Celery Mail</h2>
+      <ul>
+        <li class="active" data-tab="send-tab">Gửi Email</li>
+        <li data-tab="logs-tab">Lịch Sử</li>
+      </ul>
     </div>
-  </div>
 
-  <script src="script.js"></script>
-</body>
+    <div class="content">
+      <!-- Tab gửi email -->
+      <div id="send-tab" class="tab active">
+        <h1>Gửi Email Hàng Loạt</h1>
+        <form id="emailForm">
+          <label>Tiêu đề</label>
+          <input id="subject" placeholder="Nhập tiêu đề..." required />
+
+          <label>Nội dung (HTML)</label>
+          <textarea
+            id="content"
+            rows="6"
+            placeholder="<h1>Xin chào!</h1>"
+            required
+          ></textarea>
+
+          <label>Danh sách người nhận (mỗi dòng 1 email)</label>
+          <textarea
+            id="recipients"
+            rows="4"
+            placeholder="a@gmail.com&#10;b@gmail.com"
+            required
+          ></textarea>
+
+          <button type="submit">🚀 Gửi</button>
+        </form>
+
+        <div id="statusBox" class="status-box" style="display: none">
+          <h3>📡 Trạng thái gửi</h3>
+          <pre id="status"></pre>
+        </div>
+      </div>
+
+      <!-- Tab lịch sử -->
+      <div id="logs-tab" class="tab">
+        <h1>Lịch Sử Gửi Email</h1>
+        <button id="refreshLogs">🔄 Làm mới</button>
+        <table id="logsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Email</th>
+              <th>Tiêu đề</th>
+              <th>Trạng thái</th>
+              <th>Thời gian</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
 </html>
