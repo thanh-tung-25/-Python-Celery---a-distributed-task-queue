@@ -82,11 +82,17 @@ pip install -r requirements.txt
 2. Khởi động Redis (cần cài sẵn Redis)
 
 Bash
+taskkill /PID 25916 /F
+taskkill /PID 26332 /F
+taskkill /PID 7980 /F
+
+docker stop bb99f94f912c
 
 redis-server
 # hoặc dùng Docker:
 docker run -d -p 6380:6379 redis
 3. Mở terminal 1: chạy Flask API
+docker run -d -p 6379:6379 redis
 
 Bash
 
