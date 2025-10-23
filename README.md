@@ -101,7 +101,9 @@ python api_server.py
 
 Bash
 
-celery -A celery_app.celery_config.app worker --loglevel=info -P solo
+celery -A celery_app.celery_config.app worker --loglevel=info -P solo -n worker1@%h
+celery -A celery_app.celery_config.app worker --loglevel=info -P solo -n worker2@%h
+celery -A celery_app.celery_config.app worker --loglevel=info -P solo -n worker3@%h
 5. Gửi email thử nghiệm
 
 Truy cập http://localhost:5000 → nhập nội dung email → nhấn "Gửi"

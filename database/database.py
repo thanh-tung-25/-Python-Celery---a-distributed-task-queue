@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import pytz
 
 # Khởi tạo SQLAlchemy (chưa gắn app, sẽ gắn trong api_server.py)
 db = SQLAlchemy()
@@ -15,7 +16,11 @@ class EmailLog(db.Model):
     subject = db.Column(db.String(200))
     body = db.Column(db.Text)
     status = db.Column(db.String(50))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    # ✅ dùng giờ Việt Nam thay vì UTC
+    timestamp = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(pytz.timezone("Asia/Ho_Chi_Minh"))
+    )
 
     def __repr__(self):
         return f"<EmailLog {self.email} - {self.status}>"
