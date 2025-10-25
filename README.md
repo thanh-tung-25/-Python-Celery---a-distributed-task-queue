@@ -126,7 +126,7 @@ requirements.txt: Liệt kê thư viện Python cần cài đặt.
 
 ### 3.2. Kiểm thử hệ thống
 Bài kiểm thử	Kết quả
-Gửi 100 email song song	Thành công, trung bình 3.8 giây
+Gửi 9 email song song	Thành công, trung bình 1 giây
 Mất kết nối Redis	Celery tự động retry
 Kiểm tra log sau 24h	Dữ liệu lưu đầy đủ, đúng định dạng
 Scale thêm 2 worker	Hệ thống hoạt động ổn định, không lỗi
@@ -138,16 +138,44 @@ Kết quả kiểm thử cho thấy hệ thống hoạt động ổn định, đ
 Hệ thống được triển khai bằng Docker Compose, gồm 3 container chính:
 
 Container	Chức năng
-web	Flask API server
-redis	Message Broker & Result Backend
-worker	Celery Worker xử lý tác vụ
+🧩 web	Flask API Server
+🧠 redis	Message Broker & Result Backend
+⚙️ worker	Celery Worker xử lý tác vụ
+🧰 Các bước chạy chương trình
+🪜 Bước 1: Tạo môi trường ảo và cài đặt thư viện
+python -m venv venv  
+venv\Scripts\activate   # (Windows)  
+pip install -r requirements.txt  
 
-Khi chạy lệnh:
+🧱 Bước 2: Khởi động Redis bằng Docker  
+docker run -d -p 6380:6379 redis  
 
-docker-compose up --build
+🌐 Bước 3: Khởi động Flask API Server  
+python api_server.py  
+
+⚙️ Bước 4: Chạy Celery Workers  
+
+Có thể mở 3 terminal riêng biệt và chạy:  
+
+celery -A celery_app.celery_config.app worker --loglevel=info -P solo -n worker1@%h  
+celery -A celery_app.celery_config.app worker --loglevel=info -P solo -n worker2@%h  
+celery -A celery_app.celery_config.app worker --loglevel=info -P solo -n worker3@%h  
 
 
-toàn bộ hệ thống được khởi chạy tự động, đảm bảo tính nhất quán và dễ dàng tái tạo trên bất kỳ môi trường nào.
+Hoặc chạy cả 3 worker cùng lúc chỉ bằng một lệnh:  
+
+python worker.py  
+
+🌍 Bước 5: Truy cập giao diện web  
+
+Truy cập:  
+
+http://127.0.0.1:5000/  
+
+
+Tại đây,  có thể nhập danh sách email, gửi hàng loạt và xem lịch sử gửi email.
+   
+
 
 ## 🧠 CHƯƠNG 4: KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
 ### 4.1. Kết luận
