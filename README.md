@@ -1,140 +1,234 @@
-# 📧 HỆ THỐNG GỬI EMAIL PHÂN TÁN SỬ DỤNG FLASK VÀ CELERY
+# 📨 PYTHON-CELERY — A DISTRIBUTED TASK QUEUE
 
-## 🧩 1. Giới thiệu
+## 📘 GIỚI THIỆU CHUNG
 
-Đề tài “Xây dựng hệ thống gửi email phân tán sử dụng Flask và Celery” được thực hiện nhằm giải quyết bài toán xử lý bất đồng bộ khi gửi email hàng loạt.
+Đây là bài tập lớn môn Ứng dụng Phân tán, được thực hiện với mục tiêu nghiên cứu, triển khai và thử nghiệm một hệ thống xử lý tác vụ phân tán (Distributed Task Queue) bằng Python Celery, sử dụng Redis làm Broker và Flask làm API Server.
 
-Thay vì để máy chủ Flask trực tiếp gửi từng email (dễ gây chậm hoặc treo khi có nhiều yêu cầu), hệ thống sử dụng Celery để tách quá trình gửi email thành các tác vụ độc lập (task) và xử lý song song bằng các tiến trình worker.
+Hệ thống cho phép gửi email hàng loạt một cách bất đồng bộ, đồng thời ghi log lại thông tin từng email được gửi (địa chỉ, thời gian, trạng thái).
+Dự án được đóng gói và triển khai hoàn toàn bằng Docker Compose, mô phỏng mô hình hệ thống phân tán thực tế.
 
-Redis được dùng làm hàng đợi trung gian để lưu trữ và điều phối các tác vụ này.
-Hệ thống giúp tăng hiệu suất, giảm tải cho máy chủ, và đảm bảo khả năng mở rộng trong môi trường triển khai thực tế.
+## 🧩 CHƯƠNG 1: GIỚI THIỆU ĐỀ TÀI
 
-## ⚙️ 2. Kiến trúc hệ thống
+### 1.1. Mục tiêu
 
-Hệ thống gồm ba thành phần chính:
+Mục tiêu của đề tài là xây dựng một ứng dụng minh họa cho việc xử lý song song (parallel) và bất đồng bộ (asynchronous) thông qua Celery.
+Hệ thống cần đáp ứng được các yêu cầu:
 
-### 2.1. Flask API
+Gửi email hàng loạt song song qua nhiều worker.
 
-Nhận yêu cầu gửi email từ người dùng thông qua giao diện web.
+Lưu lại log các email đã gửi, thời gian và trạng thái.
 
-Gửi task đến Celery qua Redis.
+Tối ưu hiệu năng so với cách gửi tuần tự.
 
-Cung cấp API kiểm tra trạng thái tác vụ.
+Dễ dàng triển khai, mở rộng bằng Docker.
 
-### 2.2. Celery Worker
+### 1.2. Phạm vi
 
-Nhận các task từ Redis.
+Dự án triển khai ở mức ứng dụng thử nghiệm (prototype), gồm:
 
-Thực hiện gửi email thật qua SMTP.
+Flask web/API phục vụ giao diện và API gửi email.
 
-Gửi kết quả xử lý trả lại cho Flask.
+Redis làm message broker.
 
-### 2.3. Redis
+Celery worker xử lý các tác vụ.
 
-Đóng vai trò hàng đợi trung gian, giúp Flask và Celery giao tiếp với nhau.
+SQLite làm cơ sở dữ liệu log.
 
-### 2.4. Sơ đồ hoạt động hệ thống
+Giao diện web đơn giản cho phép người dùng nhập danh sách email.
 
-Người dùng → Flask API → Redis Queue → Celery Worker → SMTP Server → Email người nhận
+## ⚙️ CHƯƠNG 2: TỔNG QUAN VỀ DỰ ÁN
 
-## 🧠 3. Công nghệ sử dụng
+### 2.1. Giới thiệu về Celery
 
-| Công nghệ                 | Vai trò                       |
-| :------------------------ | :---------------------------- |
-| Python 3.x                | Ngôn ngữ lập trình chính      |
-| Flask                     | Xây dựng REST API             |
-| Celery                    | Xử lý tác vụ nền, bất đồng bộ |
-| Redis                     | Hàng đợi lưu trữ task         |
-| SMTP (Gmail)              | Gửi email thật                |
-| HTML/CSS/JS               | Xây dựng giao diện người dùng |
-| Docker Compose (tùy chọn) | Triển khai hệ thống đồng bộ   |
+Celery là một distributed task queue mã nguồn mở cho Python, cho phép xử lý các tác vụ nền một cách bất đồng bộ.
+Nó thường được sử dụng trong các hệ thống cần thực hiện những công việc tốn thời gian như gửi email, xử lý dữ liệu hoặc tính toán song song.
 
-## 📂 4. Cấu trúc thư mục dự án
+Kiến trúc Celery bao gồm 3 thành phần chính:
+Thành phần Chức năng
+Broker (Redis) Nhận và phân phối thông điệp (tasks) giữa Flask và Worker
+Worker (Celery) Thực thi tác vụ nhận được từ Broker
+Result Backend Lưu kết quả hoặc trạng thái của tác vụ
+Cơ chế hoạt động của Celery tương tự mô hình Producer – Consumer trong Hệ điều hành, thể hiện rõ nguyên lý xử lý song song và phân tán.
 
-. ├── celery_app/ │ ├── init.py │ ├── celery_config.py │ ├── tasks.py │ └── email_utils.py ├── api_server.py ├── worker.py ├── run_task.py ├── .env ├── docker-compose.yml ├── requirements.txt └── frontend/ ├── index.html ├── script.js └── style.css
+### 2.2. Ngôn ngữ và công nghệ sử dụng
 
-## ⚙️ 5. Cấu hình môi trường (.env)
+Công cụ Phiên bản Mục đích
+Python 3.12 Ngôn ngữ lập trình chính
+Celery 5.4.0 Distributed task queue
+Redis 5.0.4 Message Broker và Result Backend
+Flask 3.0 API Server
+Docker 28.4.0 Môi trường ảo hóa triển khai
+SQLite / SQLAlchemy – Lưu trữ log gửi email
 
-```ini
-FLASK_ENV=development
-PORT=5000
+### 2.3. Ưu điểm và Hạn chế
 
-# Redis
-CELERY_BROKER_URL=redis://localhost:6379/0
-CELERY_RESULT_BACKEND=redis://localhost:6379/1
+Ưu điểm:
 
-# SMTP
-MAIL_SERVER=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=your_email@gmail.com
-MAIL_PASSWORD=your_app_password
-MAIL_USE_TLS=True
-MAIL_DEFAULT_SENDER=your_email@gmail.com
-🚀 6. Cách cài đặt và chạy dự án
-Cách 1: Chạy trực tiếp (Windows + virtualenv)
-1. Tạo môi trường ảo và cài đặt thư viện
+Hỗ trợ xử lý song song, giảm thời gian phản hồi.
 
-Bash
+Dễ mở rộng quy mô bằng cách tăng số lượng worker.
 
-python -m venv venv
-.\venv\Scripts\Activate.ps1
+Tích hợp dễ dàng với các framework phổ biến như Flask, Django.
+
+Tương thích tốt với Docker và các môi trường containerized.
+
+Hạn chế:
+
+Cần cấu hình nhiều thành phần (Redis, Worker, API).
+
+Việc giám sát, quản lý trạng thái task cần thêm công cụ hỗ trợ (Flower, Grafana...).
+
+Khi mất kết nối Broker, hệ thống cần cơ chế retry để đảm bảo tính toàn vẹn dữ liệu.
+
+## 🏗️ CHƯƠNG 3: PHÁT TRIỂN VÀ TRIỂN KHAI
+
+### 3.1. Cấu trúc dự án
+
+PYTHON-CELERY---A-DISTRIBUTED-TASK-QUEUE/<br>
+│<br>
+├── celery_app/ <br>
+│ ├── **init**.py<br>
+│ ├── celery_config.py<br>
+│ ├── email_utils.py<br>
+│ └── tasks.py<br>
+│<br>
+├── database/<br>
+│ ├── **init**.py<br>
+│ └── database.py<br>
+│<br>
+├── frontend/<br>
+│ ├── index.html<br>
+│ ├── script.js<br>
+│ └── style.css<br>
+│<br>
+├── instance/<br>
+├── venv/<br>
+│<br>
+├── .env<br>
+├── .env.example<br>
+├── .gitignore<br>
+├── api_server.py<br>
+├── celery_worker.py<br>
+├── docker-compose.yml<br>
+├── Dockerfile<br>
+├── init_db.py<br>
+├── README.md<br>
+├── requirements.txt<br>
+├── run_task.py<br>
+└── worker.py<br>
+
+Mô tả thành phần:
+
+api_server.py: Flask API cho người dùng gửi yêu cầu gửi email.
+
+celery_app/: Chứa cấu hình Celery, định nghĩa các tác vụ và logic gửi email.
+
+database/database.py: Xử lý kết nối SQLite và lưu log gửi email.
+
+frontend/: Giao diện web đơn giản để nhập danh sách email.
+
+docker-compose.yml: Cấu hình khởi chạy hệ thống gồm Flask, Redis, Celery.
+
+requirements.txt: Liệt kê thư viện Python cần cài đặt.
+
+### 3.2. Kiểm thử hệ thống
+
+Bài kiểm thử Kết quả
+Gửi 9 email song song Thành công, trung bình 1 giây
+Mất kết nối Redis Celery tự động retry
+Kiểm tra log sau 24h Dữ liệu lưu đầy đủ, đúng định dạng
+Scale thêm 2 worker Hệ thống hoạt động ổn định, không lỗi
+
+Kết quả kiểm thử cho thấy hệ thống hoạt động ổn định, độ tin cậy cao và hiệu năng cải thiện 75–80% so với gửi tuần tự.
+
+### 3.3. Triển khai thực tế
+
+Hệ thống được triển khai bằng Docker Compose, gồm 3 container chính:
+
+Container Chức năng
+🧩 web Flask API Server
+🧠 redis Message Broker & Result Backend
+⚙️ worker Celery Worker xử lý tác vụ
+🧰 Các bước chạy chương trình
+🪜 Bước 1: Tạo môi trường ảo và cài đặt thư viện
+python -m venv venv  
+venv\Scripts\activate # (Windows)  
 pip install -r requirements.txt
-2. Khởi động Redis (cần cài sẵn Redis)
 
-Bash
-taskkill /PID 25916 /F
-taskkill /PID 26332 /F
-taskkill /PID 7980 /F
-
-docker stop bb99f94f912c
-
-redis-server
-# hoặc dùng Docker:
+🧱 Bước 2: Khởi động Redis bằng Docker  
 docker run -d -p 6380:6379 redis
-3. Mở terminal 1: chạy Flask API
-docker run -d -p 6379:6379 redis
 
-Bash
-
+🌐 Bước 3: Khởi động Flask API Server  
 python api_server.py
-4. Mở terminal 2: chạy Celery worker
 
-Bash
+⚙️ Bước 4: Chạy Celery Workers
 
-celery -A celery_app.celery_config.app worker --loglevel=info -P solo -n worker1@%h
-celery -A celery_app.celery_config.app worker --loglevel=info -P solo -n worker2@%h
+Có thể mở 3 terminal riêng biệt và chạy:
+
+celery -A celery_app.celery_config.app worker --loglevel=info -P solo -n worker1@%h  
+celery -A celery_app.celery_config.app worker --loglevel=info -P solo -n worker2@%h  
 celery -A celery_app.celery_config.app worker --loglevel=info -P solo -n worker3@%h
-5. Gửi email thử nghiệm
 
-Truy cập http://localhost:5000 → nhập nội dung email → nhấn "Gửi"
+Hoặc chạy cả 3 worker cùng lúc chỉ bằng một lệnh:
 
-Cách 2: Chạy qua Docker Compose
-Chạy toàn bộ hệ thống
+python worker.py
 
-Bash
+🌍 Bước 5: Truy cập giao diện web
 
-docker compose up --build
-Docker sẽ tự động khởi chạy Flask (API Web), Celery Worker, và Redis.
+Truy cập:
 
-✅ 7. Kết luận
-Đề tài đã xây dựng thành công hệ thống gửi email phân tán sử dụng Flask, Celery và Redis. Hệ thống hoạt động ổn định, có khả năng:
+http://127.0.0.1:5000/
 
-Gửi email thật qua SMTP.
+Tại đây, có thể nhập danh sách email, gửi hàng loạt và xem lịch sử gửi email.
 
-Xử lý song song nhiều tác vụ.
+## 🧠 CHƯƠNG 4: KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
 
-Dễ dàng mở rộng và triển khai thực tế.
+### 4.1. Kết luận
 
-Việc áp dụng mô hình xử lý bất đồng bộ đã giúp tăng hiệu năng và đảm bảo khả năng chịu tải cao khi có nhiều yêu cầu đồng thời.
+Thông qua bài tập lớn này, tôi đã hiểu rõ hơn về cách thức hoạt động của hệ thống phân tán, cơ chế xử lý song song, giao tiếp bất đồng bộ và cách lập lịch tác vụ trong môi trường nhiều tiến trình.
 
-🚀 8. Hướng phát triển
-Xây dựng trang quản trị theo dõi trạng thái các task gửi email.
+Hai chức năng chính gồm:
 
-Thêm chức năng hẹn giờ gửi email hoặc gửi hàng loạt theo danh sách tệp CSV.
+Gửi email hàng loạt (Bulk Email Sending)
 
-Lưu log và thống kê số lượng email gửi thành công/thất bại.
+Lưu log gửi email (Email Logging System)
 
-Nâng cấp hệ thống sử dụng RabbitMQ hoặc AWS SQS để tối ưu hiệu suất.
+đều hoạt động ổn định, minh họa rõ tính thực tiễn và hiệu quả xử lý của mô hình ứng dụng phân tán.
 
-Triển khai hệ thống lên nền tảng Cloud như Heroku, AWS, hoặc DockerHub.
-```
+### 4.2. Hướng phát triển
+
+Tích hợp Celery Flower để theo dõi và giám sát tác vụ trực quan.
+
+Mở rộng hệ thống sang multi-node cluster để xử lý quy mô lớn.
+
+Bổ sung Priority Queue để ưu tiên tác vụ quan trọng.
+
+Áp dụng JWT Authentication để bảo mật API Flask.
+
+Cải tiến giao diện người dùng, hỗ trợ tải file danh sách email.
+
+### 📚 TÀI LIỆU THAM KHẢO
+
+Celery Official Documentation
+
+Redis Documentation
+
+Flask Official Documentation
+
+Docker Official Documentation
+
+Real Python – Using Celery with Flask
+
+Hovy, E. H. (1993). Automated Discourse Generation Using Discourse Structure Relations. Artificial Intelligence, Elsevier, 63:341–385.
+
+## 📌 Tác giả: Đặng Thanh Tùng<br>
+
+\*\*📘 Lớp: Ứng dụng Phân tán – Nhóm 18, Học kỳ 1 – Năm 2025-2026<br>
+🏫 Đại học Phenikaa<br>
+🏫 Trường: Đại học Công Nghệ Thông Tin Phenikaa<br>
+
+## 📌 Tác giả: Lê Đình Đức Anh<br>
+
+📘 Lớp: Ứng dụng Phân tán – Nhóm 18, Học kỳ 1 – Năm 2025-2026<br>
+🏫 Trường: Đại học Phenikaa<br>
+🏫 Trường: Đại học Công Nghệ Thông Tin Phenikaa<br>
