@@ -50,10 +50,10 @@ Cơ chế hoạt động của Celery tương tự mô hình Producer – Consum
 ### 2.2. Ngôn ngữ và công nghệ sử dụng
 Công cụ	Phiên bản	Mục đích
 Python	3.12	Ngôn ngữ lập trình chính
-Celery	5.x	Distributed task queue
-Redis	7.x	Message Broker và Result Backend
+Celery	5.4.0	Distributed task queue
+Redis	5.0.4	Message Broker và Result Backend
 Flask	3.0	API Server
-Docker	26.x	Môi trường ảo hóa triển khai
+Docker	28.4.0 	Môi trường ảo hóa triển khai
 SQLite / SQLAlchemy	–	Lưu trữ log gửi email
 ### 2.3. Ưu điểm và Hạn chế
 
@@ -189,10 +189,10 @@ Real Python – Using Celery with Flask
 Hovy, E. H. (1993). Automated Discourse Generation Using Discourse Structure Relations. Artificial Intelligence, Elsevier, 63:341–385.
 
 ## 📌 Tác giả: Đặng Thanh Tùng<br>
-**📘 Lớp: Ứng dụng Phân tán – Nhóm 9, Học kỳ 1 – Năm 2025-2026<br>
+**📘 Lớp: Ứng dụng Phân tán – Nhóm 18, Học kỳ 1 – Năm 2025-2026<br>
 🏫 Đại học Phenikaa<br>
 🏫 Trường: Đại học Công Nghệ Thông Tin Phenikaa<br>
 ## 📌 Tác giả: Lê Đình Đức Anh<br>
-📘 Lớp: Ứng dụng Phân tán – Nhóm 9, Học kỳ 1 – Năm 2025-2026<br>
+📘 Lớp: Ứng dụng Phân tán – Nhóm 18, Học kỳ 1 – Năm 2025-2026<br>
 🏫 Trường: Đại học Phenikaa<br>
 🏫 Trường: Đại học Công Nghệ Thông Tin Phenikaa<br>
